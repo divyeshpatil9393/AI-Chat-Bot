@@ -1,0 +1,267 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PATIL AI Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-slate-900 text-slate-100">
+    <div class="mx-auto flex min-h-screen max-w-[1600px] flex-col">
+        <header class="border-b border-slate-800 bg-slate-950/95 px-6 py-4 backdrop-blur">
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <p class="text-sm uppercase tracking-[0.25em] text-slate-500">PATIL AI</p>
+                    <h1 class="text-2xl font-semibold">Chat like ChatGPT</h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="showPage('home')" class="rounded bg-indigo-600 px-4 py-2 text-sm font-medium transition hover:bg-indigo-500">Home</button>
+                    <button onclick="showPage('chat')" class="rounded border border-slate-700 px-4 py-2 text-sm transition hover:bg-slate-800">Chat</button>
+                    <button onclick="showPage('contact')" class="rounded border border-slate-700 px-4 py-2 text-sm transition hover:bg-slate-800">Contact</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex flex-1 flex-col overflow-hidden">
+            <section id="home" class="flex flex-1 items-center justify-center px-6 py-10">
+                <div class="w-full rounded-3xl border border-slate-800 bg-slate-950/80 p-10 shadow-2xl shadow-slate-950/20 backdrop-blur sm:max-w-3xl">
+                    <h2 class="text-4xl font-bold text-white sm:text-5xl">PATIL AI</h2>
+                    <p class="mt-4 max-w-2xl text-slate-400">A polished chat AI experience with fast responses, chat history, and a cleaner interface.</p>
+                    <div class="mt-8 flex flex-col gap-4 sm:flex-row">
+                        <button onclick="showPage('chat');" class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold transition hover:bg-indigo-500">Start Chat</button>
+                        <button onclick="showPage('contact');" class="inline-flex items-center justify-center rounded-xl border border-slate-700 px-6 py-3 text-sm text-slate-200 transition hover:border-slate-500">Contact Support</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="chat" class="hidden flex-1 overflow-hidden px-6 py-6">
+                <div class="flex h-full gap-4">
+                    <aside class="hidden w-80 flex-col rounded-3xl border border-slate-800 bg-slate-950/90 p-4 shadow-xl shadow-black/20 lg:flex">
+                        <div class="mb-4 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm uppercase tracking-[0.2em] text-slate-500">Chats</p>
+                                <h3 class="text-lg font-semibold">Conversations</h3>
+                            </div>
+                            <button onclick="newChat()" class="rounded-xl bg-indigo-600 px-3 py-2 text-sm text-white transition hover:bg-indigo-500">New</button>
+                        </div>
+                        <div id="chat-list" class="flex flex-1 flex-col gap-2 overflow-y-auto pr-1"></div>
+                    </aside>
+
+                    <div class="flex min-h-0 flex-1 flex-col rounded-3xl border border-slate-800 bg-slate-950/90 shadow-xl shadow-black/20">
+                        <div class="border-b border-slate-800 px-6 py-4">
+                            <div class="flex items-center justify-between gap-4">
+                                <div>
+                                    <p class="text-sm uppercase tracking-[0.2em] text-slate-500">Assistant</p>
+                                    <h2 class="text-xl font-semibold">PATIL AI Chat</h2>
+                                </div>
+                                <button onclick="clearChat()" class="rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-200 transition hover:border-slate-500">Clear</button>
+                            </div>
+                        </div>
+
+                        <div id="chat-box" class="flex-1 overflow-y-auto px-6 py-4 space-y-4"></div>
+
+                        <div class="border-t border-slate-800 bg-slate-900/90 px-6 py-4">
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                                <textarea id="input" rows="2" class="min-h-[100px] flex-1 resize-none rounded-3xl border border-slate-800 bg-slate-950/95 p-4 text-slate-100 outline-none transition focus:border-indigo-500" placeholder="Ask anything..." onkeydown="handleKeyDown(event)"></textarea>
+                                <button id="sendButton" onclick="sendMessage()" class="inline-flex shrink-0 items-center justify-center rounded-3xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500">Send</button>
+                            </div>
+                            <p class="mt-3 text-xs text-slate-500">Press Enter to send, Shift+Enter for a new line.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="contact" class="hidden flex flex-1 items-center justify-center px-6 py-10">
+                <div class="w-full rounded-3xl border border-slate-800 bg-slate-950/80 p-10 shadow-2xl shadow-slate-950/20 sm:max-w-2xl">
+                    <h2 class="text-3xl font-semibold">Contact PATIL AI Support</h2>
+                    <p class="mt-4 text-slate-400">Need help configuring the Gemini API key or troubleshooting the chat experience? Reach out for support.</p>
+                    <div class="mt-8 space-y-4 text-slate-200">
+                        <p><strong>Email:</strong> support@patilai.com</p>
+                        <p><strong>Phone:</strong> +91 99999 99999</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const storageKey = 'patilAiChats';
+        let chats = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        if (!Array.isArray(chats) || chats.length === 0) {
+            chats = [{ title: 'New chat', messages: [] }];
+        }
+        let currentChat = 0;
+        let isTyping = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderChats();
+            loadChat(currentChat);
+            showPage('home');
+        });
+
+        function saveChats() {
+            localStorage.setItem(storageKey, JSON.stringify(chats));
+        }
+
+        function showPage(page) {
+            document.getElementById('home').classList.add('hidden');
+            document.getElementById('chat').classList.add('hidden');
+            document.getElementById('contact').classList.add('hidden');
+            document.getElementById(page).classList.remove('hidden');
+            if (page === 'chat') {
+                loadChat(currentChat);
+            }
+        }
+
+        function newChat() {
+            chats.unshift({ title: 'New chat', messages: [] });
+            currentChat = 0;
+            saveChats();
+            renderChats();
+            loadChat(currentChat);
+            showPage('chat');
+        }
+
+        function clearChat() {
+            chats[currentChat].messages = [];
+            chats[currentChat].title = 'New chat';
+            saveChats();
+            loadChat(currentChat);
+        }
+
+        function renderChats() {
+            const list = document.getElementById('chat-list');
+            list.innerHTML = '';
+            chats.forEach((chat, index) => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = `w-full rounded-2xl px-4 py-3 text-left transition ${index === currentChat ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'}`;
+                item.innerHTML = `<div class="font-medium">${chat.title || 'New chat'}</div><div class="text-xs text-slate-500 mt-1">${chat.messages.length} messages</div>`;
+                item.onclick = () => {
+                    currentChat = index;
+                    renderChats();
+                    loadChat(index);
+                };
+                list.appendChild(item);
+            });
+        }
+
+        function loadChat(index) {
+            currentChat = index;
+            const box = document.getElementById('chat-box');
+            box.innerHTML = '';
+            const chat = chats[index];
+            chat.messages.forEach(message => addMessage(message.text, message.role));
+            renderChats();
+            scrollChatToBottom();
+        }
+
+        function addMessage(text, role) {
+            const box = document.getElementById('chat-box');
+            const wrapper = document.createElement('div');
+            wrapper.className = role === 'user' ? 'flex justify-end' : 'flex justify-start';
+            const bubble = document.createElement('div');
+            bubble.className = `max-w-[90%] whitespace-pre-wrap rounded-3xl px-5 py-4 shadow ${role === 'user' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-100'}`;
+            bubble.innerText = text;
+            wrapper.appendChild(bubble);
+            box.appendChild(wrapper);
+            scrollChatToBottom();
+        }
+
+        function setTypingState(active) {
+            isTyping = active;
+            const button = document.getElementById('sendButton');
+            button.disabled = active;
+            button.innerText = active ? 'Typing...' : 'Send';
+        }
+
+        function scrollChatToBottom() {
+            const box = document.getElementById('chat-box');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            if (isTyping) return;
+            const input = document.getElementById('input');
+            const text = input.value.trim();
+            if (!text) return;
+            addMessage(text, 'user');
+            chats[currentChat].messages.push({ role: 'user', text });
+            chats[currentChat].title = text.slice(0, 30) + (text.length > 30 ? '...' : '');
+            saveChats();
+            renderChats();
+            input.value = '';
+            showPage('chat');
+            setTypingState(true);
+            const aiDiv = document.createElement('div');
+            aiDiv.className = 'flex justify-start';
+            aiDiv.innerHTML = `<div class="max-w-[90%] rounded-3xl border border-slate-700 bg-slate-800 px-5 py-4 text-slate-300 shadow">Thinking...</div>`;
+            document.getElementById('chat-box').appendChild(aiDiv);
+            scrollChatToBottom();
+            try {
+                const apiBase = window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
+                const res = await fetch(`${apiBase}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: text,
+                        history: chats[currentChat].messages.map(m => ({ role: m.role, content: m.text }))
+                    })
+                });
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    aiDiv.innerHTML = `<div class="max-w-[90%] rounded-3xl border border-red-500 bg-red-900 px-5 py-4 text-red-200 shadow">Error: ${errorText}</div>`;
+                    setTypingState(false);
+                    return;
+                }
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let aiText = '';
+                let buffer = '';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const events = buffer.split(/\n\n/);
+                    buffer = events.pop();
+                    for (const event of events) {
+                        const line = event.trim();
+                        if (!line.startsWith('data:')) continue;
+                        const payload = line.slice(5).trim();
+                        if (!payload || payload === '[DONE]') continue;
+                        try {
+                            const parsed = JSON.parse(payload);
+                            aiText += parsed.text;
+                            aiDiv.innerHTML = `<div class="max-w-[90%] rounded-3xl border border-slate-700 bg-slate-800 px-5 py-4 text-slate-100 shadow">${aiText}</div>`;
+                            scrollChatToBottom();
+                        } catch (error) {
+                            console.warn('Unable to parse SSE payload:', payload, error);
+                        }
+                    }
+                }
+                if (!aiText) {
+                    aiText = 'The assistant did not return an answer. Please try again.';
+                    aiDiv.innerHTML = `<div class="max-w-[90%] rounded-3xl border border-yellow-500 bg-yellow-950 px-5 py-4 text-yellow-200 shadow">${aiText}</div>`;
+                }
+                chats[currentChat].messages.push({ role: 'ai', text: aiText });
+                saveChats();
+                renderChats();
+            } catch (error) {
+                aiDiv.innerHTML = `<div class="max-w-[90%] rounded-3xl border border-red-500 bg-red-900 px-5 py-4 text-red-200 shadow">Error: ${error.message}</div>`;
+            } finally {
+                setTypingState(false);
+            }
+        }
+    </script>
+</body>
+
+</html>
